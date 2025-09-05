@@ -1,0 +1,125 @@
+/* 
+ * App Theme Variables - Matching Chatbot Design
+ * Purple/Blue gradient theme inspired by the chatbot
+ */
+
+:root {
+  /* Updated theme to match chatbot colors */
+  --radius: 0.625rem;
+  
+  /* Light Theme - Purple/Blue inspired */
+  --background: #faf9ff; /* Very light purple-tinted white */
+  --foreground: #1a1a2e; /* Dark blue-purple from chatbot */
+  --card: #ffffff;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+  --primary: #8a2be2; /* Chatbot primary purple */
+  --primary-foreground: #ffffff;
+  --secondary: #f3f0ff; /* Light purple */
+  --secondary-foreground: #4b0082; /* Chatbot primary dark */
+  --muted: #f8f6ff; /* Very light purple */
+  --muted-foreground: #6b5b95; /* Medium purple */
+  --accent: #e6d9ff; /* Light purple accent */
+  --accent-foreground: #4b0082;
+  --destructive: #dc2626;
+  --border: #e1d5ff; /* Light purple border */
+  --input: #f3f0ff;
+  --ring: #8a2be2;
+  
+  /* Charts in purple theme */
+  --chart-1: #8a2be2;
+  --chart-2: #6366f1;
+  --chart-3: #8b5cf6;
+  --chart-4: #a855f7;
+  --chart-5: #c084fc;
+  
+  /* Sidebar matching theme */
+  --sidebar: #faf9ff;
+  --sidebar-foreground: #1a1a2e;
+  --sidebar-primary: #8a2be2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f0ff;
+  --sidebar-accent-foreground: #4b0082;
+  --sidebar-border: #e1d5ff;
+  --sidebar-ring: #8a2be2;
+}
+
+.dark {
+  /* Dark Theme - Enhanced to match chatbot dark theme */
+  --background: #0f0f1a; /* Darker than chatbot background */
+  --foreground: #e0e0e0; /* Chatbot text light */
+  --card: #1a1a2e; /* Chatbot background */
+  --card-foreground: #e0e0e0;
+  --popover: #16213e; /* Chatbot secondary */
+  --popover-foreground: #e0e0e0;
+  --primary: #9d4edd; /* Lighter purple for dark mode */
+  --primary-foreground: #ffffff;
+  --secondary: #16213e; /* Chatbot secondary */
+  --secondary-foreground: #e0e0e0;
+  --muted: #1a1a2e;
+  --muted-foreground: #a0a0b5; /* Muted purple-gray */
+  --accent: #0f3460; /* Chatbot accent */
+  --accent-foreground: #e0e0e0;
+  --destructive: #ef4444;
+  --border: rgba(138, 43, 226, 0.2); /* Purple border with opacity */
+  --input: rgba(32, 32, 50, 0.8);
+  --ring: #8a2be2;
+  
+  /* Dark charts */
+  --chart-1: #a855f7;
+  --chart-2: #8b5cf6;
+  --chart-3: #7c3aed;
+  --chart-4: #6d28d9;
+  --chart-5: #5b21b6;
+  
+  /* Dark sidebar */
+  --sidebar: #1a1a2e;
+  --sidebar-foreground: #e0e0e0;
+  --sidebar-primary: #9d4edd;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #16213e;
+  --sidebar-accent-foreground: #e0e0e0;
+  --sidebar-border: rgba(138, 43, 226, 0.2);
+  --sidebar-ring: #8a2be2;
+}
+
+/* Additional theme utilities */
+.gradient-primary {
+  background: linear-gradient(135deg, #8a2be2, #4b0082);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, #16213e, #0f3460);
+}
+
+.gradient-chatbot {
+  background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+  background-size: 400% 400%;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #8a2be2, #4b0082);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom scrollbar to match theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  opacity: 0.8;
+}

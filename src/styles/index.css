@@ -1,0 +1,12 @@
+/* Main Styles Index */
+/* Import component-specific styles */
+
+/* Chatbot Component Styles */
+@import './components/chatbot.css';
+
+/* You can add more component styles here as the project grows */
+/* Example:
+@import './components/navbar.css';
+@import './components/modal.css';
+@import './components/form.css';
+*/

@@ -1,0 +1,35 @@
+/* 
+ * Chatbot Component Variables
+ * Define all color and sizing variables used in chatbot styling
+ */
+
+:root {
+  /* Chatbot Colors - More Purple Theme */
+  --chatbot-primary: #9333ea;      /* More purple */
+  --chatbot-primary-dark: #6b21a8; /* Deeper purple */
+  --chatbot-secondary: #5b21b6;    /* Purple-blue */
+  --chatbot-accent: #7c3aed;       /* Purple accent */
+  --chatbot-background: #581c87;   /* Purple background */
+  
+  /* Chatbot Text Colors */
+  --chatbot-text-light: #f3e8ff;   /* Light purple text */
+  --chatbot-text-white: #ffffff;
+  --chatbot-text-placeholder: rgba(243, 232, 255, 0.6);
+  
+  /* Chatbot Shadows - Purple tinted */
+  --chatbot-shadow-light: 0 2px 12px rgba(147, 51, 234, 0.15);
+  --chatbot-shadow-medium: 0 4px 24px rgba(147, 51, 234, 0.25);
+  --chatbot-shadow-heavy: 0 0 120px rgba(147, 51, 234, 0.1), 0 32px 64px -48px rgba(107, 33, 168, 0.3);
+  
+  /* Chatbot Sizing */
+  --chatbot-width: 420px;
+  --chatbot-height: 460px;
+  --chatbot-border-radius: 15px;
+  --chatbot-icon-size: 35px;
+  
+  /* Fonts */
+  --chatbot-font-primary: "Fredoka", cursive;
+  --chatbot-font-secondary: "Comfortaa", cursive;
+  --chatbot-font-accent: "Righteous", cursive;
+  --chatbot-font-icons: "Material Symbols Rounded";
+}
