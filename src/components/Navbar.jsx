@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getData } from "@/context/userContext";
 import axios from "axios";
+import { API } from "../api/api";
 import { toast } from "sonner";
 
 const Navbar = () => {
@@ -23,7 +24,7 @@ const Navbar = () => {
   const logoutHandler = async () => {
     try {
       const res = await axios.post(
-        `http://localhost:8000/user/logout`,
+        API.LOGOUT,
         {},
         {
           headers: {

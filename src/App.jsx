@@ -14,6 +14,7 @@ import AuthSuccess from "./pages/AuthSuccess";
 import Chatbot from "./components/chatbot/Chatbot";
 import { getData } from "./context/userContext";
 import axios from "axios";
+import { API } from "./api/api";
 
 const AppLayout = ({ children }) => {
   const { user, setUser } = getData();
@@ -24,7 +25,7 @@ const AppLayout = ({ children }) => {
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken && !user) {
         try {
-          const res = await axios.get("http://localhost:8000/auth/me", {
+          const res = await axios.get(API.AUTH_ME, {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },

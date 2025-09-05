@@ -14,6 +14,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API } from "../api/api";
 import { getData } from "@/context/userContext";
 import Google from "../assets/googleLogo.png";
 
@@ -41,7 +42,7 @@ const Login = () => {
     try {
       setIsLoading(true);
       const res = await axios.post(
-        `http://localhost:8000/user/login`,
+        API.LOGIN,
         formData,
         {
           headers: {
@@ -149,7 +150,7 @@ const Login = () => {
                 </Button>
                 <Button
                   onClick={() =>
-                    window.open("http://localhost:8000/auth/google", "_self")
+                    window.open(API.GOOGLE_AUTH, "_self")
                   }
                   className="w-full border-primary/30 text-primary hover:bg-primary/10 font-secondary"
                   variant="outline"
