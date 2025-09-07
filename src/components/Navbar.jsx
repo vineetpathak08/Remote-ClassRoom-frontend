@@ -1,4 +1,4 @@
-import { BookA , LogOut, User } from "lucide-react";
+import { BookA, LogOut, User } from "lucide-react";
 import { LuBookMarked } from "react-icons/lu";
 import React from "react";
 import { Link } from "react-router-dom";
@@ -66,13 +66,46 @@ const Navbar = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <Avatar>
-                    <AvatarImage src={user?.avatar} />
-                    <AvatarFallback>CN</AvatarFallback>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={user?.avatar}
+                      alt={user?.username || user?.email}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user?.username
+                        ? user.username.charAt(0).toUpperCase()
+                        : user?.email
+                        ? user.email.charAt(0).toUpperCase()
+                        : "U"}
+                    </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage
+                        src={user?.avatar}
+                        alt={user?.username || user?.email}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {user?.username
+                          ? user.username.charAt(0).toUpperCase()
+                          : user?.email
+                          ? user.email.charAt(0).toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        {user?.username || "User"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </span>
+                    </div>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <User />

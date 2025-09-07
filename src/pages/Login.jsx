@@ -41,15 +41,11 @@ const Login = () => {
     console.log(formData);
     try {
       setIsLoading(true);
-      const res = await axios.post(
-        API.LOGIN,
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await axios.post(API.LOGIN, formData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       if (res.data.success) {
         navigate("/");
         setUser(res.data.user);
@@ -149,9 +145,7 @@ const Login = () => {
                   )}
                 </Button>
                 <Button
-                  onClick={() =>
-                    window.open(API.GOOGLE_AUTH, "_self")
-                  }
+                  onClick={() => window.open(API.GOOGLE_AUTH, "_self")}
                   className="w-full border-primary/30 text-primary hover:bg-primary/10 font-secondary"
                   variant="outline"
                 >
