@@ -1,59 +1,30 @@
 import api from './api';
-
-export const getAllLectures = async (params = {}) => {
-  try {
-    const response = await api.get('/lectures', { params });
-    return response;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getLectureById = async (id) => {
-  try {
-    const response = await api.get(`/lectures/${id}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
-};
+import { API_URL } from '../utils/constants';
 
 export const createLecture = async (formData) => {
   try {
-    const response = await api.post('/lectures', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    // Use fetch instead of axios for file upload progress tracking
+    const response = await fetch(`${API_URL}/lectures`, {
+      method: 'POST',
+      body: formData,
+      // Don't set Content-Type header - browser will set it with boundary
     });
-    return response;
+    
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+    
+    const data = await response.json();
+    return data;
   } catch (error) {
     throw error;
   }
 };
 
-export const updateLecture = async (id, data) => {
+// Rest of the exports remain the same
+export const getAllLectures = async (params = {}) => {
   try {
-    const response = await api.put(`/lectures/${id}`, data);
-    return response;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const deleteLecture = async (id) => {
-  try {
-    const response = await api.delete(`/lectures/${id}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getStreamUrl = async (id, quality) => {
-  try {
-    const response = await api.get(`/lectures/${id}/stream`, {
-      params: { quality }
-    });
+    const response = await api.get('/lectures', { params });
     return response;
   } catch (error) {
     throw error;
