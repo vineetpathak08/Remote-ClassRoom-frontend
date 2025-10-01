@@ -14,6 +14,7 @@ import {
   Send,
   X,
   BarChart3,
+  StopCircle,
 } from "lucide-react";
 import io from "socket.io-client";
 import Peer from "simple-peer";
@@ -48,8 +49,10 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [bandwidthInfo, setBandwidthInfo] = useState(null);
   const [forceAudioOnly, setForceAudioOnly] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
 
   const userVideo = useRef();
+  const cameraPreview = useRef();
   const peersRef = useRef([]);
   const recordingChunks = useRef([]);
   const mediaRecorder = useRef(null);
@@ -81,6 +84,9 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
     return () => {
       if (localStream) {
         localStream.getTracks().forEach((track) => track.stop());
+      }
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
       }
       if (newSocket) {
         newSocket.emit("leave-class", {
@@ -117,6 +123,7 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
     socket.off("poll-ended");
     socket.off("recording-started");
     socket.off("recording-stopped");
+    socket.off("class-ended");
     socket.off("participant-bandwidth-update");
 
     // Join the class room
@@ -308,6 +315,14 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
       toast.success("Recording stopped and saved");
     });
 
+    // Handle class ended
+    socket.on("class-ended", (data) => {
+      toast.info("Class has been ended by the instructor");
+      setTimeout(() => {
+        onLeave();
+      }, 3000);
+    });
+
     // Handle bandwidth updates from students (instructor only)
     socket.on("participant-bandwidth-update", (data) => {
       if (isInstructor) {
@@ -349,29 +364,61 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
         socket.off("poll-ended");
         socket.off("recording-started");
         socket.off("recording-stopped");
+        socket.off("class-ended");
         socket.off("participant-bandwidth-update");
       }
     };
   }, [socket, localStream, isInstructor, showChat]);
 
+  // Effect to handle camera preview stream assignment
+  useEffect(() => {
+    console.log("Camera stream effect triggered:", { cameraStream, hasRef: !!cameraPreview.current });
+    if (cameraStream && cameraPreview.current) {
+      cameraPreview.current.srcObject = cameraStream;
+      console.log("Camera stream assigned to preview element");
+    }
+  }, [cameraStream]);
+
+  // Effect to update main video element when localStream changes
+  useEffect(() => {
+    if (localStream && userVideo.current) {
+      userVideo.current.srcObject = localStream;
+      console.log("Main video stream updated");
+    }
+  }, [localStream]);
+
   const initializeMedia = async () => {
     try {
+      const videoConstraints = isInstructor ? {
+        width: { ideal: 1920, min: 1280 },
+        height: { ideal: 1080, min: 720 },
+        aspectRatio: { ideal: 16/9 },
+        frameRate: { ideal: 30, min: 15 },
+        facingMode: "user"
+      } : false;
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
         },
-        video: false, // Start with audio only
+        video: videoConstraints,
       });
 
       setLocalStream(stream);
+      setVideoEnabled(isInstructor); // Set video enabled state for instructors
+
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
       }
     } catch (error) {
       console.error("Error accessing media devices:", error);
-      toast.error("Please allow microphone access to join the class");
+      toast.error(
+        isInstructor
+          ? "Please allow camera and microphone access to start teaching"
+          : "Please allow microphone access to join the class"
+      );
     }
   };
 
@@ -442,38 +489,90 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
 
     if (!videoEnabled) {
       try {
+        const videoConstraints = screenSharing ? {
+          // Different constraints if screen sharing (for camera preview)
+          width: { ideal: 960, min: 640 },
+          height: { ideal: 640, min: 480 },
+          aspectRatio: { ideal: 3/2 },
+          frameRate: { ideal: 30, min: 15 },
+          facingMode: "user"
+        } : {
+          // Normal constraints for main video
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          aspectRatio: { ideal: 16/9 },
+          frameRate: { ideal: 30, min: 15 },
+          facingMode: "user"
+        };
+
         const videoStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: videoConstraints,
         });
         const videoTrack = videoStream.getVideoTracks()[0];
 
-        if (localStream) {
-          localStream.addTrack(videoTrack);
-          setVideoEnabled(true);
-
-          socket.emit("toggle-media", {
-            roomId: liveClass.roomId,
-            mediaType: "video",
-            enabled: true,
-          });
+        if (screenSharing) {
+          // If screen sharing, update the camera preview stream
+          if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+          }
+          setCameraStream(videoStream);
+          
+          if (cameraPreview.current) {
+            cameraPreview.current.srcObject = videoStream;
+          }
+        } else {
+          // Normal video toggle - add to main stream
+          if (localStream) {
+            localStream.addTrack(videoTrack);
+            
+            // Update the video element with the new stream
+            if (userVideo.current) {
+              userVideo.current.srcObject = localStream;
+            }
+          }
         }
+
+        setVideoEnabled(true);
+
+        socket.emit("toggle-media", {
+          roomId: liveClass.roomId,
+          mediaType: "video",
+          enabled: true,
+        });
+
       } catch (error) {
         console.error("Error enabling video:", error);
         toast.error("Failed to enable video");
       }
     } else {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.stop();
-        localStream.removeTrack(videoTrack);
-        setVideoEnabled(false);
+      // Disable video
+      if (screenSharing) {
+        // If screen sharing, stop camera preview stream
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+          setCameraStream(null);
+        }
+      } else {
+        // Normal video toggle - remove from main stream
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.stop();
+          localStream.removeTrack(videoTrack);
 
-        socket.emit("toggle-media", {
-          roomId: liveClass.roomId,
-          mediaType: "video",
-          enabled: false,
-        });
+          // Update the video element with the modified stream
+          if (userVideo.current) {
+            userVideo.current.srcObject = localStream;
+          }
+        }
       }
+
+      setVideoEnabled(false);
+
+      socket.emit("toggle-media", {
+        roomId: liveClass.roomId,
+        mediaType: "video",
+        enabled: false,
+      });
     }
   };
 
@@ -492,12 +591,46 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
 
         const screenTrack = screenStream.getVideoTracks()[0];
 
-        // Replace video track with screen track
-        if (localStream) {
-          const videoTrack = localStream.getVideoTracks()[0];
-          if (videoTrack) {
-            localStream.removeTrack(videoTrack);
+        // Always create camera stream for preview when screen sharing
+        try {
+          const videoConstraints = {
+            width: { ideal: 960, min: 640 },
+            height: { ideal: 640, min: 480 },
+            aspectRatio: { ideal: 3/2 },
+            frameRate: { ideal: 30, min: 15 },
+            facingMode: "user"
+          };
+
+          const cameraStreamForPreview = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraints,
+          });
+          
+          console.log("Camera stream created for preview:", cameraStreamForPreview);
+          setCameraStream(cameraStreamForPreview);
+          
+          // Set up the camera preview video element
+          if (cameraPreview.current) {
+            cameraPreview.current.srcObject = cameraStreamForPreview;
+            console.log("Camera preview assigned to video element");
+          } else {
+            console.warn("Camera preview ref not available");
           }
+
+          // Remove current video track from main stream if it exists
+          if (localStream) {
+            const currentVideoTrack = localStream.getVideoTracks()[0];
+            if (currentVideoTrack) {
+              localStream.removeTrack(currentVideoTrack);
+              currentVideoTrack.stop();
+            }
+          }
+        } catch (cameraError) {
+          console.error("Error setting up camera preview:", cameraError);
+          toast.warning("Screen sharing started but camera preview unavailable");
+        }
+
+        // Add screen track to main stream
+        if (localStream) {
           localStream.addTrack(screenTrack);
         }
 
@@ -516,7 +649,7 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
     }
   };
 
-  const stopScreenShare = () => {
+  const stopScreenShare = async () => {
     if (localStream) {
       const screenTrack = localStream.getVideoTracks()[0];
       if (screenTrack) {
@@ -524,8 +657,40 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
         localStream.removeTrack(screenTrack);
       }
     }
+
+    // Stop the camera preview stream
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    
     setScreenSharing(false);
     socket.emit("stop-screen-share", { roomId: liveClass.roomId });
+
+    // Restore camera video if it was enabled before screen sharing
+    if (videoEnabled && isInstructor) {
+      try {
+        const videoConstraints = {
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          aspectRatio: { ideal: 16/9 },
+          frameRate: { ideal: 30, min: 15 },
+          facingMode: "user"
+        };
+
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          video: videoConstraints,
+        });
+        const videoTrack = videoStream.getVideoTracks()[0];
+
+        if (localStream && videoTrack) {
+          localStream.addTrack(videoTrack);
+        }
+      } catch (error) {
+        console.error("Error restoring camera after screen share:", error);
+        toast.error("Failed to restore camera");
+      }
+    }
   };
 
   const sendChatMessage = (message) => {
@@ -755,33 +920,122 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
       <div className="flex-1 flex overflow-hidden">
         {/* Video/Slide Area */}
         <div className="flex-1 flex flex-col items-center justify-center bg-black relative">
-          {/* Local Video (Small Preview) */}
-          <video
-            ref={userVideo}
-            autoPlay
-            muted
-            playsInline
-            className="absolute bottom-4 right-4 w-48 h-36 bg-gray-800 rounded-lg border-2 border-gray-600 object-cover z-10"
-          />
-
           {/* Main Content */}
           {currentSlide ? (
-            <div className="w-full h-full flex items-center justify-center p-8">
-              <img
-                src={currentSlide.url}
-                alt="Current Slide"
-                className="max-w-full max-h-full object-contain"
+            <>
+              {/* Slide Display */}
+              <div className="w-full h-full flex items-center justify-center p-8">
+                <img
+                  src={currentSlide.url}
+                  alt="Current Slide"
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+              {/* Local Video (Small Preview when sharing slides) */}
+              <video
+                ref={userVideo}
+                autoPlay
+                muted
+                playsInline
+                className="absolute bottom-4 right-4 w-48 h-36 bg-gray-800 rounded-lg border-2 border-gray-600 object-cover z-10"
               />
-            </div>
+            </>
+          ) : screenSharing ? (
+            <>
+              {/* Screen sharing display - shows the actual shared screen */}
+              <div className="w-full h-full relative">
+                <video
+                  ref={userVideo}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full bg-gray-900 object-contain"
+                />
+                
+                {/* Camera preview in bottom right corner */}
+                <div className="absolute bottom-4 right-4 z-20">
+                  {cameraStream ? (
+                    <video
+                      ref={cameraPreview}
+                      autoPlay
+                      muted
+                      playsInline
+                      className="w-72 h-48 bg-gray-800 rounded-lg border-2 border-blue-500 object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-72 h-48 bg-gray-800 rounded-lg border-2 border-blue-500 shadow-lg flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <VideoIcon className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-gray-400">Camera Off</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="absolute bottom-1 left-1 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                    {liveClass.instructorName}
+                  </div>
+                </div>
+
+                <div className="absolute bottom-8 left-8 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                  <Monitor className="w-4 h-4 text-blue-400" />
+                  <p className="text-sm font-medium">
+                    {liveClass.instructorName} is sharing screen
+                  </p>
+                </div>
+              </div>
+            </>
           ) : (
-            <div className="text-center text-white">
-              <VideoIcon className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-              <p className="text-gray-400">
-                {isInstructor
-                  ? "Share your screen or slides to start teaching"
-                  : "Waiting for instructor to share content..."}
-              </p>
-            </div>
+            <>
+              {/* Instructor Video as Main Content */}
+              {isInstructor && videoEnabled ? (
+                <div className="w-full h-full relative">
+                  <video
+                    ref={userVideo}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full bg-gray-900 object-cover"
+                  />
+                  <div className="absolute bottom-8 left-8 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg">
+                    <p className="text-sm font-medium">
+                      {liveClass.instructorName} (You)
+                    </p>
+                  </div>
+                </div>
+              ) : !isInstructor && peers.length > 0 ? (
+                /* Show instructor's video from peers for students */
+                <div className="w-full h-full relative">
+                  {peers.map((peer, index) => {
+                    // Find the instructor's peer (you might need to modify this logic based on how you track roles)
+                    return (
+                      <div key={index} className="w-full h-full">
+                        <PeerVideo peer={peer} isMainView={true} />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Default state when no video */
+                <div className="text-center text-white">
+                  <VideoIcon className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+                  <p className="text-gray-400 mb-2">
+                    {isInstructor
+                      ? videoEnabled
+                        ? "Your camera is the main focus"
+                        : "Turn on your camera to appear on the main screen"
+                      : "Waiting for instructor's video..."}
+                  </p>
+                  {isInstructor && !videoEnabled && (
+                    <button
+                      onClick={toggleVideo}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 mx-auto transition"
+                    >
+                      <VideoIcon className="w-4 h-4" />
+                      <span>Turn On Camera</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
           )}
           {/* Bandwidth Monitor */}
           <div className="absolute top-4 left-4 z-10">
@@ -941,6 +1195,26 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
             <Settings className="w-5 h-5 text-white" />
           </button>
 
+          {/* End Class (Instructor Only) */}
+          {isInstructor && (
+            <button
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Are you sure you want to end this class? This action cannot be undone."
+                  )
+                ) {
+                  handleEndClass();
+                }
+              }}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2 transition"
+              title="End Class for All"
+            >
+              <StopCircle className="w-5 h-5" />
+              <span>End Class</span>
+            </button>
+          )}
+
           {/* Leave Call */}
           <button
             onClick={leaveClass}
@@ -981,7 +1255,7 @@ const LiveClassRoom = ({ liveClass, onLeave }) => {
   );
 };
 // Video Component for displaying peer videos
-const PeerVideo = ({ peer }) => {
+const PeerVideo = ({ peer, isMainView = false }) => {
   const ref = useRef();
 
   useEffect(() => {
@@ -995,7 +1269,11 @@ const PeerVideo = ({ peer }) => {
       playsInline
       autoPlay
       ref={ref}
-      className="w-32 h-24 bg-gray-800 rounded-lg border border-gray-600 object-cover"
+      className={
+        isMainView
+          ? "w-full h-full bg-gray-900 object-cover"
+          : "w-32 h-24 bg-gray-800 rounded-lg border border-gray-600 object-cover"
+      }
     />
   );
 };

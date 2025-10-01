@@ -1,941 +1,461 @@
-
-// import React, { useState } from 'react';
-// import { Upload, Video, Calendar, Play, Mic } from 'lucide-react';
-// import { useNavigate } from 'react-router-dom';
-// import { createLiveClass, startLiveClass } from '../services/liveClassService';
-
-// const Faculty = () => {
-//   const navigate = useNavigate();
-//   const [activeTab, setActiveTab] = useState('upload');
-//   const [uploadForm, setUploadForm] = useState({
-//     title: '',
-//     description: '',
-//     instructor: '',
-//     subject: '',
-//     duration: '',
-//     video: null,
-//     thumbnail: null,
-//     slides: []
-//   });
-//   const [liveClassForm, setLiveClassForm] = useState({
-//     title: '',
-//     instructor: '',
-//     subject: '',
-//     scheduledTime: '',
-//     duration: 60,
-//     audioOnly: false
-//   });
-//   const [uploading, setUploading] = useState(false);
-//   const [uploadProgress, setUploadProgress] = useState(0);
-
-//   const SUBJECTS = [
-//     'Artificial Intelligence',
-//     'VLSI',
-//     'Renewable Energy',
-//     'Machine Learning',
-//     'Data Science',
-//     'IoT',
-//     'Blockchain',
-//     'Cybersecurity'
-//   ];
-
-//   const handleUploadChange = (e) => {
-//     const { name, value, files } = e.target;
-//     if (files) {
-//       if (name === 'slides') {
-//         setUploadForm(prev => ({ ...prev, [name]: Array.from(files) }));
-//       } else {
-//         setUploadForm(prev => ({ ...prev, [name]: files[0] }));
-//       }
-//     } else {
-//       setUploadForm(prev => ({ ...prev, [name]: value }));
-//     }
-//   };
-
-//   const handleLectureUpload = async () => {
-//     if (!uploadForm.title || !uploadForm.instructor || !uploadForm.subject || !uploadForm.duration) {
-//       alert('Please fill in all required fields');
-//       return;
-//     }
-
-//     setUploading(true);
-    
-//     const formData = new FormData();
-//     formData.append('title', uploadForm.title);
-//     formData.append('description', uploadForm.description);
-//     formData.append('instructor', uploadForm.instructor);
-//     formData.append('subject', uploadForm.subject);
-//     formData.append('duration', uploadForm.duration);
-    
-//     if (uploadForm.video) formData.append('video', uploadForm.video);
-//     if (uploadForm.thumbnail) formData.append('thumbnail', uploadForm.thumbnail);
-//     uploadForm.slides.forEach(slide => formData.append('slides', slide));
-
-//     try {
-//       for (let i = 0; i <= 100; i += 10) {
-//         setUploadProgress(i);
-//         await new Promise(resolve => setTimeout(resolve, 500));
-//       }
-      
-//       alert('Lecture uploaded successfully!');
-//       setUploadForm({
-//         title: '',
-//         description: '',
-//         instructor: '',
-//         subject: '',
-//         duration: '',
-//         video: null,
-//         thumbnail: null,
-//         slides: []
-//       });
-//     } catch (error) {
-//       alert('Upload failed: ' + error.message);
-//     } finally {
-//       setUploading(false);
-//       setUploadProgress(0);
-//     }
-//   };
-
-//   const handleStartInstantClass = async () => {
-//     if (!liveClassForm.title || !liveClassForm.instructor) {
-//       alert('Please fill in title and instructor name');
-//       return;
-//     }
-
-//     try {
-//       const payload = {
-//         title: liveClassForm.title,
-//         instructor: liveClassForm.instructor,
-//         subject: liveClassForm.subject || 'General',
-//         scheduledTime: new Date().toISOString(),
-//         duration: liveClassForm.duration || 60,
-//       };
-
-//       const createdRes = await createLiveClass(payload);
-//       const created = createdRes.data?.data || createdRes.data;
-
-//       const startedRes = await startLiveClass(created._id);
-//       const started = startedRes.data?.data || startedRes.data;
-
-//       navigate('/live-classes', { state: { instant: true, liveClass: started, role: 'instructor', audioOnly: liveClassForm.audioOnly } });
-//     } catch (err) {
-//       alert('Failed to start live class: ' + (err?.message || 'Unknown error'));
-//     }
-//   };
-
-//   const handleScheduleClass = () => {
-//     if (!liveClassForm.title || !liveClassForm.instructor || !liveClassForm.scheduledTime) {
-//       alert('Please fill in all required fields');
-//       return;
-//     }
-
-//     alert('Class scheduled successfully!');
-//     setLiveClassForm({
-//       title: '',
-//       instructor: '',
-//       subject: '',
-//       scheduledTime: '',
-//       duration: 60,
-//       audioOnly: false
-//     });
-//   };
-
-//   return (
-//     <div className="max-w-5xl mx-auto p-4">
-//       <div className="mb-6">
-//         <h2 className="text-2xl font-bold text-gray-900 mb-2">Faculty Dashboard</h2>
-//         <p className="text-gray-600">Upload lectures or start live classes</p>
-//       </div>
-
-//       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
-//         <button
-//           onClick={() => setActiveTab('upload')}
-//           className={`flex-1 py-2 px-4 rounded-md font-medium transition ${
-//             activeTab === 'upload'
-//               ? 'bg-white text-blue-600 shadow-sm'
-//               : 'text-gray-600 hover:text-gray-900'
-//           }`}
-//         >
-//           <Upload className="w-4 h-4 inline mr-2" />
-//           Upload Lecture
-//         </button>
-//         <button
-//           onClick={() => setActiveTab('live')}
-//           className={`flex-1 py-2 px-4 rounded-md font-medium transition ${
-//             activeTab === 'live'
-//               ? 'bg-white text-blue-600 shadow-sm'
-//               : 'text-gray-600 hover:text-gray-900'
-//           }`}
-//         >
-//           <Video className="w-4 h-4 inline mr-2" />
-//           Live Class
-//         </button>
-//       </div>
-
-//       {activeTab === 'upload' && (
-//         <div className="bg-white rounded-lg shadow-sm border p-6">
-//           <div className="space-y-4">
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Lecture Title *
-//               </label>
-//               <input
-//                 type="text"
-//                 name="title"
-//                 value={uploadForm.title}
-//                 onChange={handleUploadChange}
-//                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                 placeholder="Introduction to Machine Learning"
-//               />
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Description
-//               </label>
-//               <textarea
-//                 name="description"
-//                 value={uploadForm.description}
-//                 onChange={handleUploadChange}
-//                 rows={3}
-//                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                 placeholder="Brief description of the lecture content..."
-//               />
-//             </div>
-
-//             <div className="grid md:grid-cols-2 gap-4">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">
-//                   Instructor Name *
-//                 </label>
-//                 <input
-//                   type="text"
-//                   name="instructor"
-//                   value={uploadForm.instructor}
-//                   onChange={handleUploadChange}
-//                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                   placeholder="Dr. Smith"
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">
-//                   Subject *
-//                 </label>
-//                 <select
-//                   name="subject"
-//                   value={uploadForm.subject}
-//                   onChange={handleUploadChange}
-//                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                 >
-//                   <option value="">Select Subject</option>
-//                   {SUBJECTS.map(subject => (
-//                     <option key={subject} value={subject}>{subject}</option>
-//                   ))}
-//                 </select>
-//               </div>
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Duration (minutes) *
-//               </label>
-//               <input
-//                 type="number"
-//                 name="duration"
-//                 value={uploadForm.duration}
-//                 onChange={handleUploadChange}
-//                 min="1"
-//                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                 placeholder="45"
-//               />
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Video File * (MP4, AVI, MOV)
-//               </label>
-//               <input
-//                 type="file"
-//                 name="video"
-//                 onChange={handleUploadChange}
-//                 accept="video/*"
-//                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//               />
-//               <p className="text-xs text-gray-500 mt-1">Max file size: 500 MB</p>
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Thumbnail Image
-//               </label>
-//               <input
-//                 type="file"
-//                 name="thumbnail"
-//                 onChange={handleUploadChange}
-//                 accept="image/*"
-//                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//               />
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Slides (PDFs/PPTs)
-//               </label>
-//               <input
-//                 type="file"
-//                 name="slides"
-//                 onChange={handleUploadChange}
-//                 accept=".pdf,.ppt,.pptx"
-//                 multiple
-//                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//               />
-//             </div>
-
-//             {uploading && (
-//               <div>
-//                 <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-//                   <div
-//                     className="bg-blue-600 h-3 rounded-full transition-all"
-//                     style={{ width: `${uploadProgress}%` }}
-//                   />
-//                 </div>
-//                 <p className="text-sm text-center text-gray-600">{uploadProgress}%</p>
-//               </div>
-//             )}
-
-//             <button
-//               onClick={handleLectureUpload}
-//               disabled={uploading}
-//               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center"
-//             >
-//               <Upload className="w-5 h-5 mr-2" />
-//               {uploading ? `Uploading... ${uploadProgress}%` : 'Upload Lecture'}
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {activeTab === 'live' && (
-//         <div className="space-y-6">
-//           <div className="bg-white rounded-lg shadow-sm border p-6">
-//             <div className="flex items-center justify-between mb-4">
-//               <div>
-//                 <h3 className="text-lg font-bold text-gray-900">Start Instant Class</h3>
-//                 <p className="text-sm text-gray-600">Begin teaching immediately</p>
-//               </div>
-//               <label className="flex items-center text-sm cursor-pointer">
-//                 <input
-//                   type="checkbox"
-//                   checked={liveClassForm.audioOnly}
-//                   onChange={(e) => setLiveClassForm(prev => ({ ...prev, audioOnly: e.target.checked }))}
-//                   className="mr-2"
-//                 />
-//                 <Mic className="w-4 h-4 mr-1" />
-//                 Audio-Only Mode
-//               </label>
-//             </div>
-
-//             <div className="grid md:grid-cols-2 gap-4 mb-4">
-//               <input
-//                 type="text"
-//                 placeholder="Class Title *"
-//                 value={liveClassForm.title}
-//                 onChange={(e) => setLiveClassForm(prev => ({ ...prev, title: e.target.value }))}
-//                 className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//               />
-//               <input
-//                 type="text"
-//                 placeholder="Instructor Name *"
-//                 value={liveClassForm.instructor}
-//                 onChange={(e) => setLiveClassForm(prev => ({ ...prev, instructor: e.target.value }))}
-//                 className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//               />
-//             </div>
-
-//             <button
-//               onClick={handleStartInstantClass}
-//               className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 flex items-center justify-center"
-//             >
-//               <Play className="w-5 h-5 mr-2" />
-//               Start Live Class Now
-//             </button>
-//           </div>
-
-//           <div className="bg-white rounded-lg shadow-sm border p-6">
-//             <h3 className="text-lg font-bold text-gray-900 mb-4">Schedule Future Class</h3>
-            
-//             <div className="space-y-4">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">
-//                   Class Title *
-//                 </label>
-//                 <input
-//                   type="text"
-//                   value={liveClassForm.title}
-//                   onChange={(e) => setLiveClassForm(prev => ({ ...prev, title: e.target.value }))}
-//                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                   placeholder="Advanced Neural Networks"
-//                 />
-//               </div>
-
-//               <div className="grid md:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Instructor *
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={liveClassForm.instructor}
-//                     onChange={(e) => setLiveClassForm(prev => ({ ...prev, instructor: e.target.value }))}
-//                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                     placeholder="Dr. Kumar"
-//                   />
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Subject *
-//                   </label>
-//                   <select
-//                     value={liveClassForm.subject}
-//                     onChange={(e) => setLiveClassForm(prev => ({ ...prev, subject: e.target.value }))}
-//                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                   >
-//                     <option value="">Select Subject</option>
-//                     {SUBJECTS.map(subject => (
-//                       <option key={subject} value={subject}>{subject}</option>
-//                     ))}
-//                   </select>
-//                 </div>
-//               </div>
-
-//               <div className="grid md:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Date & Time *
-//                   </label>
-//                   <input
-//                     type="datetime-local"
-//                     value={liveClassForm.scheduledTime}
-//                     onChange={(e) => setLiveClassForm(prev => ({ ...prev, scheduledTime: e.target.value }))}
-//                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                   />
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                     Duration (minutes) *
-//                   </label>
-//                   <input
-//                     type="number"
-//                     value={liveClassForm.duration}
-//                     onChange={(e) => setLiveClassForm(prev => ({ ...prev, duration: parseInt(e.target.value) || 60 }))}
-//                     min="15"
-//                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                   />
-//                 </div>
-//               </div>
-
-//               <button
-//                 onClick={handleScheduleClass}
-//                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center"
-//               >
-//                 <Calendar className="w-5 h-5 mr-2" />
-//                 Schedule Class
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Faculty;
-
-
-import React, { useState } from 'react';
-import { Upload, Video, Calendar, Play, Mic } from 'lucide-react';
-import { createLecture } from '../services/lectureService';
-import { API_URL } from '../utils/constants';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Video,
+  Calendar,
+  Clock,
+  Plus,
+  Play,
+  Users,
+  BookOpen,
+  Settings,
+  Monitor,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import {
+  createLiveClass,
+  startLiveClass,
+  getInstructorClasses,
+} from "../services/liveClassService";
+import LiveClassRoom from "../components/liveClass/LiveClassRoom";
+import { toast } from "react-toastify";
 
 const Faculty = () => {
-  const [activeTab, setActiveTab] = useState('upload');
-  const [uploadForm, setUploadForm] = useState({
-    title: '',
-    description: '',
-    instructor: '',
-    subject: '',
-    duration: '',
-    video: null,
-    thumbnail: null,
-    slides: []
-  });
-  const [liveClassForm, setLiveClassForm] = useState({
-    title: '',
-    instructor: '',
-    subject: '',
-    scheduledTime: '',
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isStartingInstant, setIsStartingInstant] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const { user, token } = useAuth();
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    title: "",
+    subject: "",
+    scheduledTime: "",
     duration: 60,
-    audioOnly: false
+    maxParticipants: 100,
   });
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const SUBJECTS = [
-    'Artificial Intelligence',
-    'VLSI',
-    'Renewable Energy',
-    'Machine Learning',
-    'Data Science',
-    'IoT',
-    'Blockchain',
-    'Cybersecurity'
-  ];
+  const [instantFormData, setInstantFormData] = useState({
+    title: "",
+  });
 
-  const handleUploadChange = (e) => {
-    const { name, value, files } = e.target;
-    if (files) {
-      if (name === 'slides') {
-        setUploadForm(prev => ({ ...prev, [name]: Array.from(files) }));
-      } else {
-        setUploadForm(prev => ({ ...prev, [name]: files[0] }));
-      }
-    } else {
-      setUploadForm(prev => ({ ...prev, [name]: value }));
+  useEffect(() => {
+    if (user && token) {
+      fetchUpcomingClasses();
+    }
+  }, [user, token]);
+
+  const fetchUpcomingClasses = async () => {
+    try {
+      const response = await getInstructorClasses();
+      // Filter for upcoming scheduled classes
+      const upcoming =
+        response.data.myClasses?.filter(
+          (cls) =>
+            cls.status === "scheduled" &&
+            new Date(cls.scheduledTime) > new Date()
+        ) || [];
+      setUpcomingClasses(upcoming.slice(0, 3)); // Show only next 3 classes
+    } catch (error) {
+      console.error("Error fetching upcoming classes:", error);
     }
   };
 
-  const handleLectureUpload = async () => {
-    if (!uploadForm.title || !uploadForm.instructor || !uploadForm.subject || !uploadForm.duration) {
-      alert('Please fill in all required fields');
+  const handleLeaveClass = () => {
+    setSelectedClass(null);
+    // Refresh upcoming classes when leaving
+    fetchUpcomingClasses();
+  };
+
+  const handleScheduleClass = async (e) => {
+    e.preventDefault();
+
+    if (!user || !token) {
+      toast.error("You must be logged in to schedule a class");
       return;
     }
 
-    if (!uploadForm.video) {
-      alert('Please select a video file');
-      return;
-    }
-
-    setUploading(true);
-    
-    const formData = new FormData();
-    formData.append('title', uploadForm.title);
-    formData.append('description', uploadForm.description);
-    formData.append('instructor', uploadForm.instructor);
-    formData.append('subject', uploadForm.subject);
-    formData.append('duration', uploadForm.duration);
-    
-    if (uploadForm.video) formData.append('video', uploadForm.video);
-    if (uploadForm.thumbnail) formData.append('thumbnail', uploadForm.thumbnail);
-    uploadForm.slides.forEach(slide => formData.append('slides', slide));
+    setLoading(true);
 
     try {
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percentComplete = (e.loaded / e.total) * 100;
-          setUploadProgress(Math.round(percentComplete));
-        }
+      await createLiveClass(formData);
+      toast.success("Class scheduled successfully!");
+      setShowCreateForm(false);
+      setFormData({
+        title: "",
+        subject: "",
+        scheduledTime: "",
+        duration: 60,
+        maxParticipants: 100,
       });
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status === 201) {
-          alert('Lecture uploaded successfully!');
-          setUploadForm({
-            title: '',
-            description: '',
-            instructor: '',
-            subject: '',
-            duration: '',
-            video: null,
-            thumbnail: null,
-            slides: []
-          });
-          document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
-        } else {
-          alert('Upload failed. Please try again.');
-        }
-        setUploading(false);
-        setUploadProgress(0);
-      });
-
-      xhr.addEventListener('error', () => {
-        alert('Upload failed. Please check your connection.');
-        setUploading(false);
-        setUploadProgress(0);
-      });
-
-      xhr.open('POST', `${API_URL}/lectures`);
-      xhr.send(formData);
+      fetchUpcomingClasses();
     } catch (error) {
-      alert('Upload failed: ' + error.message);
-      setUploading(false);
-      setUploadProgress(0);
+      console.error("Error scheduling class:", error);
+      toast.error(error.response?.data?.message || "Failed to schedule class");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleStartInstantClass = () => {
-    if (!liveClassForm.title || !liveClassForm.instructor) {
-      alert('Please fill in title and instructor name');
-      return;
-    }
-    
-    const classData = {
-      _id: 'instant_' + Date.now(),
-      title: liveClassForm.title,
-      instructor: liveClassForm.instructor,
-      subject: liveClassForm.subject || 'General',
-      scheduledTime: new Date().toISOString(),
-      duration: liveClassForm.duration,
-      status: 'live',
-      audioOnly: liveClassForm.audioOnly,
-      participants: 0
-    };
-    
-    const existingClasses = JSON.parse(localStorage.getItem('liveClasses') || '[]');
-    existingClasses.push(classData);
-    localStorage.setItem('liveClasses', JSON.stringify(existingClasses));
-    
-    alert('Live class started! Students can now join from the Live Classes page.');
-    
-    setLiveClassForm({
-      title: '',
-      instructor: '',
-      subject: '',
-      scheduledTime: '',
-      duration: 60,
-      audioOnly: false
-    });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleScheduleClass = () => {
-    if (!liveClassForm.title || !liveClassForm.instructor || !liveClassForm.scheduledTime) {
-      alert('Please fill in all required fields');
+  const handleInstantInputChange = (e) => {
+    const { name, value } = e.target;
+    setInstantFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleStartInstantClass = async (e) => {
+    e.preventDefault();
+    
+    if (!user || !token) {
+      toast.error("You must be logged in to start a class");
       return;
     }
 
-    alert('Class scheduled successfully!');
-    setLiveClassForm({
-      title: '',
-      instructor: '',
-      subject: '',
-      scheduledTime: '',
-      duration: 60,
-      audioOnly: false
-    });
+    if (!instantFormData.title.trim()) {
+      toast.error("Please enter a class title");
+      return;
+    }
+
+    setIsStartingInstant(true);
+
+    try {
+      // Create instant class with user-provided title and teacher's name
+      const classData = {
+        title: instantFormData.title,
+        subject: "Live Session",
+        scheduledTime: new Date().toISOString(),
+        duration: 60,
+        maxParticipants: 100,
+      };
+
+      const createResponse = await createLiveClass(classData);
+      const newClass = createResponse.data;
+
+      // Start the class immediately
+      await startLiveClass(newClass._id);
+
+      toast.success("Instant class started successfully!");
+      
+      // Reset form
+      setInstantFormData({ title: "" });
+
+      // Set the selected class to enter the live room
+      setSelectedClass({
+        ...newClass,
+        status: "live",
+      });
+    } catch (error) {
+      console.error("Error starting instant class:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to start instant class"
+      );
+    } finally {
+      setIsStartingInstant(false);
+    }
   };
+
+  // If a class is selected, show the live class room
+  if (selectedClass) {
+    return (
+      <LiveClassRoom liveClass={selectedClass} onLeave={handleLeaveClass} />
+    );
+  }
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Faculty Dashboard</h2>
-        <p className="text-gray-600">Upload lectures or start live classes</p>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Faculty Dashboard
+        </h1>
+        <p className="text-gray-600">
+          Manage your live classes and virtual meetings
+        </p>
       </div>
 
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
-        <button
-          onClick={() => setActiveTab('upload')}
-          className={`flex-1 py-2 px-4 rounded-md font-medium transition ${
-            activeTab === 'upload'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Upload className="w-4 h-4 inline mr-2" />
-          Upload Lecture
-        </button>
-        <button
-          onClick={() => setActiveTab('live')}
-          className={`flex-1 py-2 px-4 rounded-md font-medium transition ${
-            activeTab === 'live'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Video className="w-4 h-4 inline mr-2" />
-          Live Class
-        </button>
-      </div>
-
-      {activeTab === 'upload' && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lecture Title *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={uploadForm.title}
-                onChange={handleUploadChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="Introduction to Machine Learning"
-              />
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Start Instant Class */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-t-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold mb-2">
+                  Start Instant Class
+                </h3>
+                <p className="text-red-100">Begin a live class immediately</p>
+              </div>
+              <Video className="h-8 w-8 text-red-200" />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={uploadForm.description}
-                onChange={handleUploadChange}
-                rows={3}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="Brief description of the lecture content..."
-              />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
+          </div>
+          
+          <div className="p-6">
+            <form onSubmit={handleStartInstantClass} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Instructor Name *
+                  Class Title
                 </label>
                 <input
                   type="text"
-                  name="instructor"
-                  value={uploadForm.instructor}
-                  onChange={handleUploadChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Dr. Smith"
+                  name="title"
+                  value={instantFormData.title}
+                  onChange={handleInstantInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Enter class title"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subject *
-                </label>
-                <select
-                  name="subject"
-                  value={uploadForm.subject}
-                  onChange={handleUploadChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="">Select Subject</option>
-                  {SUBJECTS.map(subject => (
-                    <option key={subject} value={subject}>{subject}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Duration (minutes) *
-              </label>
-              <input
-                type="number"
-                name="duration"
-                value={uploadForm.duration}
-                onChange={handleUploadChange}
-                min="1"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="45"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Video File * (MP4, AVI, MOV)
-              </label>
-              <input
-                type="file"
-                name="video"
-                onChange={handleUploadChange}
-                accept="video/*"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-              <p className="text-xs text-gray-500 mt-1">Max file size: 500 MB</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Thumbnail Image
-              </label>
-              <input
-                type="file"
-                name="thumbnail"
-                onChange={handleUploadChange}
-                accept="image/*"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Slides (PDFs/PPTs)
-              </label>
-              <input
-                type="file"
-                name="slides"
-                onChange={handleUploadChange}
-                accept=".pdf,.ppt,.pptx"
-                multiple
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {uploading && (
-              <div>
-                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                  <div
-                    className="bg-blue-600 h-3 rounded-full transition-all"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Instructor: <strong>{user?.name || 'Unknown'}</strong></span>
                 </div>
-                <p className="text-sm text-center text-gray-600">{uploadProgress}%</p>
-              </div>
-            )}
-
-            <button
-              onClick={handleLectureUpload}
-              disabled={uploading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center"
-            >
-              <Upload className="w-5 h-5 mr-2" />
-              {uploading ? `Uploading... ${uploadProgress}%` : 'Upload Lecture'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'live' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Start Instant Class</h3>
-                <p className="text-sm text-gray-600">Begin teaching immediately</p>
-              </div>
-              <label className="flex items-center text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={liveClassForm.audioOnly}
-                  onChange={(e) => setLiveClassForm(prev => ({ ...prev, audioOnly: e.target.checked }))}
-                  className="mr-2"
-                />
-                <Mic className="w-4 h-4 mr-1" />
-                Audio-Only Mode
-              </label>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Class Title *"
-                value={liveClassForm.title}
-                onChange={(e) => setLiveClassForm(prev => ({ ...prev, title: e.target.value }))}
-                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-              <input
-                type="text"
-                placeholder="Instructor Name *"
-                value={liveClassForm.instructor}
-                onChange={(e) => setLiveClassForm(prev => ({ ...prev, instructor: e.target.value }))}
-                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <button
-              onClick={handleStartInstantClass}
-              className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 flex items-center justify-center"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Start Live Class Now
-            </button>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Schedule Future Class</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Class Title *
-                </label>
-                <input
-                  type="text"
-                  value={liveClassForm.title}
-                  onChange={(e) => setLiveClassForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Advanced Neural Networks"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Instructor *
-                  </label>
-                  <input
-                    type="text"
-                    value={liveClassForm.instructor}
-                    onChange={(e) => setLiveClassForm(prev => ({ ...prev, instructor: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder="Dr. Kumar"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Subject *
-                  </label>
-                  <select
-                    value={liveClassForm.subject}
-                    onChange={(e) => setLiveClassForm(prev => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">Select Subject</option>
-                    {SUBJECTS.map(subject => (
-                      <option key={subject} value={subject}>{subject}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date & Time *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={liveClassForm.scheduledTime}
-                    onChange={(e) => setLiveClassForm(prev => ({ ...prev, scheduledTime: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Duration (minutes) *
-                  </label>
-                  <input
-                    type="number"
-                    value={liveClassForm.duration}
-                    onChange={(e) => setLiveClassForm(prev => ({ ...prev, duration: parseInt(e.target.value) || 60 }))}
-                    min="15"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+                <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Starting: <strong>Immediately</strong></span>
                 </div>
               </div>
 
               <button
-                onClick={handleScheduleClass}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center"
+                type="submit"
+                disabled={isStartingInstant}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Calendar className="w-5 h-5 mr-2" />
-                Schedule Class
+                {isStartingInstant ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Start Class
+                  </>
+                )}
               </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Schedule Class */}
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Schedule Class</h3>
+              <p className="text-blue-100">Plan a future live session</p>
             </div>
+            <Calendar className="h-8 w-8 text-blue-200" />
+          </div>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="bg-white text-blue-600 px-6 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Schedule
+          </button>
+        </div>
+      </div>
+
+      {/* Upcoming Classes */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Upcoming Classes
+          </h2>
+        </div>
+        <div className="p-6">
+          {upcomingClasses.length > 0 ? (
+            <div className="space-y-4">
+              {upcomingClasses.map((classItem) => (
+                <div
+                  key={classItem._id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        {classItem.title}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {classItem.subject}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(classItem.scheduledTime).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      {classItem.participants?.length || 0}/
+                      {classItem.maxParticipants}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No upcoming classes scheduled</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Links */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <button
+          onClick={() => navigate("/live-classes")}
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
+        >
+          <Monitor className="h-8 w-8 text-gray-600 mb-4" />
+          <h3 className="font-semibold text-gray-900 mb-2">All Live Classes</h3>
+          <p className="text-gray-600 text-sm">
+            View and manage all your classes
+          </p>
+        </button>
+
+        <button
+          onClick={() => navigate("/lectures")}
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
+        >
+          <BookOpen className="h-8 w-8 text-gray-600 mb-4" />
+          <h3 className="font-semibold text-gray-900 mb-2">Lecture Library</h3>
+          <p className="text-gray-600 text-sm">Upload and manage lectures</p>
+        </button>
+
+        <button
+          onClick={() => navigate("/downloads")}
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
+        >
+          <Settings className="h-8 w-8 text-gray-600 mb-4" />
+          <h3 className="font-semibold text-gray-900 mb-2">Settings</h3>
+          <p className="text-gray-600 text-sm">Configure your preferences</p>
+        </button>
+      </div>
+
+      {/* Schedule Class Modal */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Schedule New Class</h2>
+            <form onSubmit={handleScheduleClass} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Class Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter class title"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter subject"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Scheduled Time
+                </label>
+                <input
+                  type="datetime-local"
+                  name="scheduledTime"
+                  value={formData.scheduledTime}
+                  onChange={handleInputChange}
+                  required
+                  min={new Date().toISOString().slice(0, 16)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Duration (min)
+                  </label>
+                  <input
+                    type="number"
+                    name="duration"
+                    value={formData.duration}
+                    onChange={handleInputChange}
+                    min="15"
+                    max="480"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Max Participants
+                  </label>
+                  <input
+                    type="number"
+                    name="maxParticipants"
+                    value={formData.maxParticipants}
+                    onChange={handleInputChange}
+                    min="1"
+                    max="500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Scheduling..." : "Schedule Class"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+
+
     </div>
   );
 };

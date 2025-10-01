@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Play, Download, FileText, Clock, User, Wifi } from 'lucide-react';
-import { VIDEO_QUALITIES } from '../../utils/constants';
-import useDownload from '../../hooks/useDownload';
+import React, { useState } from "react";
+import { Play, Download, FileText, Clock, User, Wifi } from "lucide-react";
+import { toast } from "react-toastify";
+import { VIDEO_QUALITIES } from "../../utils/constants";
+import useDownload from "../../hooks/useDownload";
 
 const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
   const [showQualityMenu, setShowQualityMenu] = useState(false);
@@ -11,7 +12,7 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
     setShowQualityMenu(false);
     const success = await startDownload(lecture, quality);
     if (success) {
-      alert('Lecture downloaded successfully!');
+      toast.success("Lecture downloaded successfully!");
     }
   };
 
@@ -19,10 +20,10 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition">
       {/* Thumbnail */}
       <div className="relative">
-        <img 
-          src={lecture.thumbnail || 'https://via.placeholder.com/400x225'} 
-          alt={lecture.title} 
-          className="w-full h-40 object-cover" 
+        <img
+          src={lecture.thumbnail || "https://via.placeholder.com/400x225"}
+          alt={lecture.title}
+          className="w-full h-40 object-cover"
         />
         <div className="absolute top-2 right-2">
           {isOffline && (
@@ -36,7 +37,7 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
           {lecture.duration} min
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="p-4">
         {/* Subject Badge */}
@@ -47,21 +48,27 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{lecture.title}</h3>
-        
+        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+          {lecture.title}
+        </h3>
+
         {/* Instructor */}
         <p className="text-sm text-gray-500 mb-3 flex items-center">
           <User className="w-3 h-3 mr-1" />
           {lecture.instructor}
         </p>
-        
+
         {/* Meta Info */}
         <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
           <span className="flex items-center">
             <Clock className="w-3 h-3 mr-1" />
             {lecture.duration} min
           </span>
-          <span>{lecture.fileSize ? `${(lecture.fileSize / (1024 * 1024)).toFixed(0)} MB` : 'N/A'}</span>
+          <span>
+            {lecture.fileSize
+              ? `${(lecture.fileSize / (1024 * 1024)).toFixed(0)} MB`
+              : "N/A"}
+          </span>
         </div>
 
         {/* Download Progress */}
@@ -83,7 +90,7 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
             <Play className="w-4 h-4 mr-1" />
             Watch
           </button>
-          
+
           {!isOffline && (
             <div className="relative">
               <button
@@ -93,11 +100,13 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
               >
                 <Download className="w-4 h-4" />
               </button>
-              
+
               {showQualityMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
                   <div className="p-2">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">Select Quality:</p>
+                    <p className="text-xs font-semibold text-gray-700 mb-2">
+                      Select Quality:
+                    </p>
                     {Object.values(VIDEO_QUALITIES).map((quality) => (
                       <button
                         key={quality.value}
@@ -105,7 +114,9 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
                       >
                         <div className="font-medium">{quality.label}</div>
-                        <div className="text-xs text-gray-500">{quality.size}</div>
+                        <div className="text-xs text-gray-500">
+                          {quality.size}
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -113,7 +124,7 @@ const LectureCard = ({ lecture, onWatch, isOffline = false }) => {
               )}
             </div>
           )}
-          
+
           <button className="border border-gray-300 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-50">
             <FileText className="w-4 h-4" />
           </button>

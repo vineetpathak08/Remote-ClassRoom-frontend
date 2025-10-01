@@ -1,20 +1,26 @@
-import axios from 'axios';
-import { API_URL } from '../utils/constants';
+import axios from "axios";
+import { API_URL } from "../utils/constants";
 
 const api = axios.create({
   baseURL: API_URL,
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Add authorization token if available
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     // Add connection type header if available
     if (navigator.connection) {
-      config.headers['connection-type'] = navigator.connection.effectiveType;
+      config.headers["connection-type"] = navigator.connection.effectiveType;
     }
     return config;
   },
@@ -30,11 +36,13 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      console.error('API Error:', error.response.data);
+      console.error("API Error:", error.response.data);
       return Promise.reject(error.response.data);
     } else if (error.request) {
-      console.error('Network Error:', error.message);
-      return Promise.reject({ message: 'Network error. Please check your connection.' });
+      console.error("Network Error:", error.message);
+      return Promise.reject({
+        message: "Network error. Please check your connection.",
+      });
     }
     return Promise.reject(error);
   }

@@ -1,8 +1,8 @@
-import api from './api';
+import api from "./api";
 
 export const getAllLiveClasses = async (params = {}) => {
   try {
-    const response = await api.get('/live-classes', { params });
+    const response = await api.get("/live-classes", { params });
     return response;
   } catch (error) {
     throw error;
@@ -20,7 +20,7 @@ export const getLiveClassById = async (id) => {
 
 export const createLiveClass = async (data) => {
   try {
-    const response = await api.post('/live-classes', data);
+    const response = await api.post("/live-classes", data);
     return response;
   } catch (error) {
     throw error;
@@ -39,6 +39,15 @@ export const startLiveClass = async (id) => {
 export const endLiveClass = async (id) => {
   try {
     const response = await api.post(`/live-classes/${id}/end`);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getInstructorClasses = async () => {
+  try {
+    const response = await api.get("/live-classes/instructor/my-classes");
     return response;
   } catch (error) {
     throw error;
