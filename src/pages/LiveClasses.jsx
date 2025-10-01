@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Calendar, Clock, User, Users } from 'lucide-react';
+import { Video, Calendar, Clock, User, Play } from 'lucide-react';
 import { getAllLiveClasses } from '../services/liveClassService';
 import { useNetwork } from '../context/NetworkContext';
+import { useAuth } from '../context/AuthContext';
+import LiveClassRoom from '../components/liveClass/LiveClassRoom';
 
 const LiveClasses = () => {
   const [liveClasses, setLiveClasses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [inClass, setInClass] = useState(false);
   const { isOnline } = useNetwork();
+  const { token } = useAuth();
 
   useEffect(() => {
-    fetchLiveClasses();
-  }, []);
+    if (token) {
+      fetchLiveClasses();
+    }
+  }, [token]);
 
   const fetchLiveClasses = async () => {
     try {
@@ -19,25 +26,35 @@ const LiveClasses = () => {
       setLiveClasses(response.data || []);
     } catch (error) {
       console.error('Error fetching live classes:', error);
-      // Mock data
+      // Mock data for testing
       setLiveClasses([
         {
           _id: '1',
           title: 'Machine Learning Basics',
-          instructor: 'Dr. Sharma',
+          instructor: {
+            _id: 'inst1',
+            name: 'Dr. Sharma'
+          },
+          instructorName: 'Dr. Sharma',
           subject: 'Artificial Intelligence',
-          scheduledTime: new Date(Date.now() + 86400000).toISOString(),
+          scheduledTime: new Date().toISOString(),
           duration: 60,
-          status: 'scheduled'
+          status: 'live',
+          roomId: 'room-ml-basics-001'
         },
         {
           _id: '2',
           title: 'Wind Energy Technologies',
-          instructor: 'Prof. Verma',
+          instructor: {
+            _id: 'inst2',
+            name: 'Prof. Verma'
+          },
+          instructorName: 'Prof. Verma',
           subject: 'Renewable Energy',
-          scheduledTime: new Date(Date.now() + 172800000).toISOString(),
+          scheduledTime: new Date(Date.now() + 3600000).toISOString(),
           duration: 45,
-          status: 'scheduled'
+          status: 'scheduled',
+          roomId: 'room-wind-energy-002'
         }
       ]);
     } finally {
@@ -62,6 +79,35 @@ const LiveClasses = () => {
       minute: '2-digit' 
     });
   };
+
+  const handleJoinClass = (liveClass) => {
+    // Ensure we have all required data
+    if (!liveClass || !liveClass.roomId) {
+      toast.error('Invalid class data');
+      return;
+    }
+    
+    console.log('Joining class:', liveClass); // Debug log
+    setSelectedClass(liveClass);
+    setInClass(true);
+  };
+
+  const handleLeaveClass = () => {
+    setInClass(false);
+    setSelectedClass(null);
+    // Refresh classes list
+    fetchLiveClasses();
+  };
+
+  // Show live class room if user has joined
+  if (inClass && selectedClass) {
+    return (
+      <LiveClassRoom 
+        liveClass={selectedClass} 
+        onLeave={handleLeaveClass}
+      />
+    );
+  }
 
   if (!isOnline) {
     return (
@@ -109,7 +155,7 @@ const LiveClasses = () => {
                     {liveClass.status === 'live' && (
                       <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded flex items-center">
                         <span className="w-2 h-2 bg-red-600 rounded-full mr-1 animate-pulse"></span>
-                        LIVE
+                        LIVE NOW
                       </span>
                     )}
                   </div>
@@ -119,7 +165,7 @@ const LiveClasses = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                     <div className="flex items-center">
                       <User className="w-4 h-4 mr-2" />
-                      {liveClass.instructor}
+                      {liveClass.instructorName || liveClass.instructor?.name || 'Instructor'}
                     </div>
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
@@ -134,12 +180,43 @@ const LiveClasses = () => {
                       {liveClass.duration} minutes
                     </div>
                   </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      ✓ Audio-first streaming
+                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      ✓ Live chat & Q&A
+                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      ✓ Screen sharing
+                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      ✓ Auto recording
+                    </span>
+                  </div>
                 </div>
 
                 <div className="ml-4">
-                  <button className="bg-blue-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-blue-700 flex items-center">
-                    <Video className="w-4 h-4 mr-2" />
-                    {liveClass.status === 'live' ? 'Join Now' : 'Set Reminder'}
+                  <button
+                    onClick={() => handleJoinClass(liveClass)}
+                    className={`${
+                      liveClass.status === 'live'
+                        ? 'bg-red-600 hover:bg-red-700 animate-pulse'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    } text-white py-3 px-6 rounded-lg font-medium transition flex items-center space-x-2`}
+                  >
+                    {liveClass.status === 'live' ? (
+                      <>
+                        <Play className="w-5 h-5" />
+                        <span>Join Now</span>
+                      </>
+                    ) : (
+                      <>
+                        <Video className="w-5 h-5" />
+                        <span>Set Reminder</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -147,6 +224,34 @@ const LiveClasses = () => {
           ))}
         </div>
       )}
+
+      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-blue-900 mb-3">
+          Before Joining a Live Class:
+        </h3>
+        <ul className="space-y-2 text-sm text-blue-800">
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Allow microphone access when prompted</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Find a quiet place to minimize background noise</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Test your internet connection (audio-only mode works on 2G)</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Use headphones for better audio quality</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Keep your device charged or plugged in</span>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 };
